@@ -3,10 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soldatenmarsch Lernapp</title>
+    <title>Soldatenmarsch Learning App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .keyboard { margin: 20px 0; }
+        .key { display: inline-block; width: 50px; height: 50px; background-color: #fff; border: 1px solid #000; text-align: center; line-height: 50px; cursor: pointer; }
+        .key.active { background-color: #ffdd57; }
+    </style>
 </head>
 <body>
-    <h1>Soldatenmarsch Lernapp</h1>
-    <p>This is a sample content taken from soldatenmarsch_lernapp.html.</p>
+    <h1>Soldatenmarsch Learning App</h1>
+    <div class="keyboard">
+        <div class="key" data-note="C">C</div>
+        <div class="key" data-note="D">D</div>
+        <div class="key" data-note="E">E</div>
+        <div class="key" data-note="F">F</div>
+        <div class="key" data-note="G">G</div>
+        <div class="key" data-note="A">A</div>
+        <div class="key" data-note="B">B</div>
+    </div>
+    <audio id="C" src="sounds/C.mp3"></audio>
+    <audio id="D" src="sounds/D.mp3"></audio>
+    <audio id="E" src="sounds/E.mp3"></audio>
+    <audio id="F" src="sounds/F.mp3"></audio>
+    <audio id="G" src="sounds/G.mp3"></audio>
+    <audio id="A" src="sounds/A.mp3"></audio>
+    <audio id="B" src="sounds/B.mp3"></audio>
+    <script>
+        const keys = document.querySelectorAll('.key');
+        keys.forEach(key => {
+            key.addEventListener('click', function() {
+                const note = this.getAttribute('data-note');
+                const audio = document.getElementById(note);
+                audio.currentTime = 0;
+                audio.play();
+                this.classList.add('active');
+                setTimeout(() => this.classList.remove('active'), 200);
+            });
+        });
+        document.addEventListener('keydown', function(event) {
+            const note = event.key.toUpperCase();
+            const key = document.querySelector(`.key[data-note='${note}']`);
+            if (key) {
+                key.click();
+            }
+        });
+    </script>
 </body>
 </html>
