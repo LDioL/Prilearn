@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Soldatenmarsch – Lern-App</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, Arial, sans-serif;
+  background: #0f0f1a;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+}
+.screen { width: 100%; max-width: 480px; display: none; flex-direction: column; align-items: center; }
+.screen.active { display: flex; }
+
+.title { font-size: 22px; font-weight: 700; text-align: center; margin: 32px 0 6px; }
+.subtitle { font-size: 13px; color: #aaa; text-align: center; margin-bottom: 28px; }
+
+.big-btn {
+  background: #FAC775; color: #633806;
+  border: none; border-radius: 14px;
+  padding: 16px 40px; font-size: 17px; font-weight: 700;
+  cursor: pointer; width: 100%; max-width: 300px; margin-top: 8px;
+}
+.big-btn:active { transform: scale(0.97); }
+.big-btn.green { background: #4ade80; color: #14532d; }
+.big-btn.gray { background: #2a2a3a; color: #bbb; border: 1px solid #444; }
+
+.step-box {
+  background: #1a1a2e; border-radius: 14px; padding: 18px;
+  width: 100%; margin-bottom: 24px;
+}
+.step-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 14px; }
+.step-row:last-child { margin-bottom: 0; }
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.sn-orange { background: #FAC775; color: #633806; }
+.sn-green  { background: #4ade80; color: #14532d; }
+
+.round-display { font-size: 52px; font-weight: 700; color: #FAC775; margin: 16px 0 2px; }
+.round-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+
+.takt-badge {
+  background: #1a1a2e; border-radius: 10px;
+  padding: 8px 20px; font-size: 13px; color: #aaa;
+  margin-bottom: 14px; text-align: center;
+}
+.takt-badge span { font-size: 20px; font-weight: 700; color: #fff; }
+
+.keyboard {
+  display: flex; gap: 5px; justify-content: center;
+  width: 100%; margin: 12px 0;
+}
+.key {
+  border-radius: 0 0 8px 8px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding-bottom: 8px; font-size: 14px; font-weight: 700;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  transition: background 0.08s, transform 0.08s;
+  flex: 1; max-width: 62px; min-width: 36px;
+}
+.key.white { background: #efefef; color: #333; border: 1.5px solid #ccc; height: 130px; }
+.key.white.dim { background: #c0c0c0; color: #888; }
+.key.white.lit { background: #FAC775; border-color: #BA7517; color: #633806; transform: scale(1.05); }
+.key.white.ok  { background: #4ade80; border-color: #16a34a; color: #14532d; }
+.key.white.bad { background: #f87171; border-color: #dc2626; color: #7f1d1d; }
+.key.white:active { transform: scale(0.95); }
+
+.seq-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center; padding: 12px;
+  background: #1a1a2e; border-radius: 12px;
+  width: 100%; margin: 10px 0;
+}
+.seq-dot {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  background: #2a2a3a; color: #666; border: 2px solid #333;
+  transition: all 0.15s;
+}
+.seq-dot.now  { background: #FAC775; color: #633806; border-color: #BA7517; transform: scale(1.15); }
+.seq-dot.done { background: #4ade80; color: #14532d; border-color: #16a34a; }
+
+.progress-bar { width: 100%; height: 8px; background: #2a2a3a; border-radius: 4px; margin: 8px 0 16px; }
+.progress-fill { height: 100%; background: #FAC775; border-radius: 4px; transition: width 0.3s; }
+
+.msg { font-size: 15px; color: #aaa; text-align: center; min-height: 28px; margin: 8px 0; }
+
+.btn-row { display: flex; gap: 10px; width: 100%; margin-top: 12px; }
+.btn-row .big-btn { max-width: none; flex: 1; padding: 12px; font-size: 14px; }
+
+.star-big { font-size: 72px; text-align: center; margin: 24px 0 12px; }
+.done-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+.done-sub { font-size: 14px; color: #aaa; margin-bottom: 28px; }
+</style>
+</head>
+<body>
+
+<!-- SCREEN 0: Intro -->
+<div class="screen active" id="s-intro">
+  <div class="title">Soldatenmarsch</div>
+  <div class="subtitle">Xylophon · Takt 15–24 · G-Dur</div>
+  <div class="step-box">
+    <div class="step-row"><div class="step-num sn-orange">1</div><div>Hör die Melodie <strong>3x</strong> zu</div></div>
+    <div class="step-row"><div class="step-num sn-orange">2</div><div>Schau welche Tasten leuchten</div></div>
+    <div class="step-row"><div class="step-num sn-green">3</div><div>Spiel es selbst nach!</div></div>
+  </div>
+  <button class="big-btn" onclick="startListen()">Los geht's!</button>
+</div>
+
+<!-- SCREEN 1: Zuhören -->
+<div class="screen" id="s-listen">
+  <div style="font-size:13px;color:#888;margin-top:16px;">Durchgang</div>
+  <div class="round-display" id="round-num">1</div>
+  <div class="round-sub">von 3</div>
+  <div class="takt-badge">Takt <span id="cur-takt">–</span></div>
+  <div class="keyboard" id="kb-listen">
+    <div class="key white dim" data-n="">C</div>
+    <div class="key white dim" data-n="">D</div>
+    <div class="key white dim" data-n="">E</div>
+    <div class="key white dim" data-n="">F</div>
+    <div class="key white" data-n="G4">G</div>
+    <div class="key white" data-n="A4">A</div>
+    <div class="key white" data-n="H4">H</div>
+  </div>
+  <div class="seq-wrap" id="seq-listen"></div>
+  <div class="msg" id="msg-listen">Spielt...</div>
+</div>
+
+<!-- SCREEN 2: Spielen -->
+<div class="screen" id="s-play">
+  <div style="font-size:19px;font-weight:700;margin:16px 0 4px;">Jetzt du dran!</div>
+  <div style="font-size:13px;color:#aaa;margin-bottom:10px;">Drück die richtigen Tasten</div>
+  <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+  <div class="seq-wrap" id="seq-play"></div>
+  <div class="keyboard" id="kb-play">
+    <div class="key white dim" onclick="hit('C4')" data-n="C4">C</div>
+    <div class="key white dim" onclick="hit('D4')" data-n="D4">D</div>
+    <div class="key white dim" onclick="hit('E4')" data-n="E4">E</div>
+    <div class="key white dim" onclick="hit('F4')" data-n="F4">F</div>
+    <div class="key white" onclick="hit('G4')" data-n="G4">G</div>
+    <div class="key white" onclick="hit('A4')" data-n="A4">A</div>
+    <div class="key white" onclick="hit('H4')" data-n="H4">H</div>
+  </div>
+  <div class="msg" id="msg-play">Welche Taste ist die erste?</div>
+  <div class="btn-row">
+    <button class="big-btn gray" onclick="showHint()">Hilfe</button>
+    <button class="big-btn gray" onclick="resetPlay()">Neustart</button>
+    <button class="big-btn gray" onclick="replayMelody()">&#9654; Nochmal hören</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: Fertig -->
+<div class="screen" id="s-done">
+  <div class="star-big">⭐</div>
+  <div class="done-title">Super gemacht!</div>
+  <div class="done-sub">Du hast Takt 15–24 gespielt!</div>
+  <button class="big-btn" onclick="resetPlay(); show('s-play')">Nochmal spielen</button>
+  <div style="height:12px"></div>
+  <button class="big-btn gray" onclick="startListen()">Nochmal zuhören</button>
+</div>
+
+<script>
+const FREQ = { G4:392.00, A4:440.00, H4:493.88, C4:261.63, D4:293.66, E4:329.63, F4:349.23 };
+
+const melody = [
+  {n:null,  d:500, t:15},
+  {n:'G4',  d:270, t:16},{n:'A4', d:270, t:16},{n:'H4', d:270, t:16},{n:'A4', d:270, t:16},
+  {n:'G4',  d:270, t:17},{n:'A4', d:270, t:17},{n:'H4', d:270, t:17},{n:'A4', d:270, t:17},
+  {n:'G4',  d:270, t:18},{n:'H4', d:270, t:18},{n:'A4', d:270, t:18},{n:'G4', d:460, t:18},
+  {n:null,  d:500, t:19},
+  {n:'G4',  d:270, t:20},{n:'A4', d:460, t:20},
+  {n:'G4',  d:270, t:21},{n:'A4', d:460, t:21},
+  {n:null,  d:500, t:22},
+  {n:'G4',  d:270, t:23},{n:'A4', d:270, t:23},{n:'H4', d:460, t:23},
+  {n:'G4',  d:270, t:24},{n:'A4', d:460, t:24},
+];
+
+const notes = melody.filter(x => x.n);
+
+let ctx = null;
+let round = 0;
+let pidx = 0;
+let playing = false;
+
+function ac() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+function beep(noteKey, ms) {
+  const f = FREQ[noteKey]; if (!f) return;
+  const c = ac();
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.connect(g); g.connect(c.destination);
+  o.type = 'triangle';
+  o.frequency.value = f;
+  g.gain.setValueAtTime(0.45, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + ms/1000);
+  o.start(); o.stop(c.currentTime + ms/1000 + 0.05);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function litKey(kbId, noteKey) {
+  document.querySelectorAll('#' + kbId + ' .key').forEach(k => {
+    const n = k.getAttribute('data-n');
+    k.classList.remove('lit');
+    if (n && n === noteKey) k.classList.add('lit');
+  });
+}
+
+function buildSeq(id) {
+  const w = document.getElementById(id); w.innerHTML = '';
+  notes.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'seq-dot'; d.id = id + '-' + i;
+    d.textContent = item.n.replace('4','');
+    w.appendChild(d);
+  });
+}
+
+function updateSeqListen(idx) {
+  notes.forEach((_, i) => {
+    const el = document.getElementById('seq-listen-' + i);
+    if (!el) return;
+    el.classList.remove('now','done');
+    if (i < idx) el.classList.add('done');
+    else if (i === idx) el.classList.add('now');
+  });
+}
+
+function updateSeqPlay() {
+  notes.forEach((_, i) => {
+    const el = document.getElementById('seq-play-' + i);
+    if (!el) return;
+    el.classList.remove('now','done');
+    if (i < pidx) el.classList.add('done');
+    else if (i === pidx) el.classList.add('now');
+  });
+  document.getElementById('prog').style.width = Math.round(pidx / notes.length * 100) + '%';
+}
+
+async function playMelody() {
+  if (playing) return;
+  playing = true;
+  let noteIdx = 0;
+  for (let i = 0; i < melody.length; i++) {
+    const m = melody[i];
+    document.getElementById('cur-takt').textContent = m.t;
+    if (m.n) {
+      litKey('kb-listen', m.n);
+      updateSeqListen(noteIdx);
+      beep(m.n, m.d);
+      noteIdx++;
+    } else {
+      litKey('kb-listen', null);
+    }
+    await sleep(m.d + 90);
+  }
+  litKey('kb-listen', null);
+  updateSeqListen(notes.length);
+  playing = false;
+
+  round++;
+  document.getElementById('round-num').textContent = Math.min(round, 3);
+  if (round >= 3) {
+    document.getElementById('msg-listen').textContent = 'Super! Jetzt bist du dran!';
+    await sleep(1400);
+    resetPlay();
+    show('s-play');
+  } else {
+    document.getElementById('msg-listen').textContent = 'Nochmal...';
+    await sleep(700);
+    playMelody();
+  }
+}
+
+function startListen() {
+  ac();
+  round = 0; playing = false;
+  document.getElementById('round-num').textContent = '1';
+  document.getElementById('cur-takt').textContent = '–';
+  document.getElementById('msg-listen').textContent = 'Spielt...';
+  buildSeq('seq-listen');
+  show('s-listen');
+  setTimeout(() => playMelody(), 400);
+}
+
+function replayMelody() {
+  round = 0; playing = false;
+  document.getElementById('round-num').textContent = '1';
+  document.getElementById('cur-takt').textContent = '–';
+  document.getElementById('msg-listen').textContent = 'Spielt...';
+  buildSeq('seq-listen');
+  show('s-listen');
+  setTimeout(() => playMelody(), 400);
+}
+
+function resetPlay() {
+  pidx = 0;
+  buildSeq('seq-play');
+  updateSeqPlay();
+  document.getElementById('msg-play').textContent = 'Welche Taste ist die erste?';
+}
+
+function hit(noteKey) {
+  if (pidx >= notes.length) return;
+  ac();
+  beep(noteKey, 350);
+  const expected = notes[pidx].n;
+  const kbEl = document.querySelector('#kb-play [data-n="' + noteKey + '"]');
+
+  if (noteKey === expected) {
+    if (kbEl) { kbEl.classList.add('ok'); setTimeout(() => kbEl.classList.remove('ok'), 350); }
+    pidx++;
+    updateSeqPlay();
+    if (pidx >= notes.length) {
+      setTimeout(() => show('s-done'), 500);
+    } else {
+      document.getElementById('msg-play').textContent = 'Weiter so!';
+      setTimeout(() => { document.getElementById('msg-play').textContent = 'Welche kommt als nächstes?'; }, 600);
+    }
+  } else {
+    if (kbEl) { kbEl.classList.add('bad'); setTimeout(() => kbEl.classList.remove('bad'), 400); }
+    document.getElementById('msg-play').innerHTML = '<span style="color:#f87171">Falsch — versuch nochmal!</span>';
+    setTimeout(() => { document.getElementById('msg-play').textContent = 'Welche Taste kommt jetzt?'; }, 1200);
+  }
+}
+
+function showHint() {
+  if (pidx >= notes.length) return;
+  const n = notes[pidx].n;
+  document.getElementById('msg-play').innerHTML = 'Drück: <strong style="color:#FAC775;font-size:20px;">' + n.replace('4','') + '</strong>';
+  const k = document.querySelector('#kb-play [data-n="' + n + '"]');
+  if (k) { k.classList.add('lit'); setTimeout(() => k.classList.remove('lit'), 1500); }
+}
+</script>
+</body>
+</html>
